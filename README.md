@@ -1,4 +1,3 @@
-[![License](https://img.shields.io/badge/license-Apache%202-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0) 
 # Java Auth Client Library
 
 # Table of Contents
@@ -26,7 +25,7 @@ Conceptually, the library has two parts:
 
 This class also holds other bits of information like the URL of the authorisation server (`authURI`) and the regular expression pattern (`clientURIRegex`) to match the client URIs needing the authorisation.
 
-Suppose you have two URIs - one http://awesomeserver.com/hello and http://coolserver.com/hello being the another. If both of these require authorisation from the same server and if that authorisation can be fulfilled with the same set of client credentials, then you only need one instance of `OAuthClientCredentials` class but with a regular expression in clientURIRegex that can match both of those URIs. Howeever, if both of those URIs require different set of client credentials or a different authorisation server or both, then you need two separate instances.
+Suppose you have two URIs - one http://awesomeserver.com/hello and http://coolserver.com/hello being the other. If both of these require authorisation from the same server and if that authorisation can be fulfilled with the same set of client credentials, then you only need one instance of `OAuthClientCredentials` class but with a regular expression in clientURIRegex that can match both of those URIs. Howeever, if both of those URIs require different set of client credentials or a different authorisation server or both, then you need two separate instances.
 
 Once you have one or more instances of `OAuthClientCredentials` class, create an instance of `ClientCredentialsProvider` class with type `OAuthClientCredentials`. This class needs at least one instance of the `OAuthClientCredentials` and thus requires it to be passed in the constructor.
 
@@ -164,4 +163,4 @@ We welcome your interest in Capital One's Open Source Projects (the "Project"). 
 ##### [Link to Corporate Agreement](https://docs.google.com/forms/d/e/1FAIpQLSeAbobIPLCVZD_ccgtMWBDAcN68oqbAJBQyDTSAQ1AkYuCp_g/viewform?usp=send_form)
 This project adheres to the [Open Source Code of Conduct][code-of-conduct]. By participating, you are expected to honor this code.
 
-[code-of-conduct]: http://www.capitalone.io/codeofconduct/
+[code-of-conduct]: https://developer.capitalone.com/single/code-of-conduct/
