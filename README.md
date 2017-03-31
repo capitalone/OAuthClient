@@ -1,3 +1,4 @@
+[![License](https://img.shields.io/badge/license-Apache%202-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0) 
 # Java Auth Client Library
 
 # Table of Contents
