@@ -1,5 +1,24 @@
 package com.capitalone.auth.oauth.service;
 
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.CoreMatchers.sameInstance;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyLong;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
+
 import com.capitalone.auth.ClientCredentialsProvider;
 import com.capitalone.auth.Token;
 import com.capitalone.auth.oauth.factory.HttpConnectionConfig;
@@ -8,7 +27,19 @@ import com.capitalone.auth.oauth.factory.HttpConnectionPool;
 import com.capitalone.auth.oauth.framework.ClientCredentialsNotFoundException;
 import com.capitalone.auth.oauth.framework.OAuthClientCredentials;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
 import junit.framework.TestCase;
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
 import org.apache.http.client.HttpClient;
@@ -20,22 +51,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
-
-import java.io.IOException;
-import java.net.URI;
-import java.util.concurrent.*;
-import java.util.concurrent.locks.Lock;
-
-import static org.hamcrest.CoreMatchers.*;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.instanceOf;
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyLong;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.*;
 
 /**
  * Copyright [2016] Capital One Services, LLC
@@ -143,6 +158,38 @@ public class OAuthTokenServiceTest {
         OAuthTokenAttributes cacheAttributes = testee.getTokenCache().get(clientCredentials);
         assertThat(cacheAttributes.getToken(), sameInstance(token));
     }
+
+  @Test
+  public void testObtainTokenFor_closesResponseInputStream() throws Exception {
+    final HttpClient mockClient = mock(HttpClient.class);
+    final HttpResponse mockHttpResponse = mock(HttpResponse.class);
+    final HttpEntity mockResponseHttpEntity = mock(HttpEntity.class);
+
+    final OAuthClientCredentials clientCredentials = OAuthClientCredentials.newBuilder()
+        .clientId("xyz").clientSecret("abc").grantType("client_credentials")
+        .authServerURI(new URI("https://my.oauth.club/")).build();
+
+    when(mockProvider.getClientCredentialsFor(any(URI.class))).thenReturn(clientCredentials);
+    when(mockClient.execute(any(HttpPost.class))).thenReturn(mockHttpResponse);
+
+    String dummyData = "{\n" +
+        "  \"access_token\": \"sparkpost-token\",\n" +
+        "  \"token_type\": \"Bearer\",\n" +
+        "  \"expires_in\": 60\n" +
+        "}";
+
+    InputStream inputStream = new ByteArrayInputStream(dummyData.getBytes());
+    InputStream spyInputStream = spy(inputStream);
+
+    when(mockHttpResponse.getEntity()).thenReturn(mockResponseHttpEntity);
+    when(mockResponseHttpEntity.getContent()).thenReturn(spyInputStream);
+    when(mockResponseHttpEntity.isStreaming()).thenReturn(true);
+
+    when(mockPool.getHttpClient()).thenReturn(mockClient);
+    testee.obtainTokenFor(new URI("https://my.service.to.be.authorised.com/"));
+    verify(spyInputStream, times(1)).close();
+  }
+
 
     @Test(expected = IOException.class)
     public void testIOExceptionBubbles() throws Exception {
