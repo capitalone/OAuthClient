@@ -10,7 +10,20 @@ import com.capitalone.auth.oauth.framework.ClientCredentialsNotFoundException;
 import com.capitalone.auth.oauth.framework.OAuthClientCredentials;
 import com.capitalone.auth.oauth.framework.protocol.ServerOAuthToken;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.commons.io.IOUtils;
+import java.io.IOException;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -18,16 +31,7 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.message.BasicNameValuePair;
-
-import java.io.IOException;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.*;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+import org.apache.http.util.EntityUtils;
 
 /**
  * <p/>
@@ -235,7 +239,7 @@ public class OAuthTokenService implements TokenService {
 
             final HttpResponse httpResponse = httpClient.execute(httpPost);
             final HttpEntity entity = httpResponse.getEntity();
-            final String content = IOUtils.toString(entity.getContent());
+            final String content = EntityUtils.toString(entity);
             final ServerOAuthToken serverToken = this.objectMapper.readValue(content, ServerOAuthToken.class);
             final OAuthToken token = OAuthToken.newBuilder()
                     .accessToken(serverToken.getAccessToken())
